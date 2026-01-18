@@ -1,0 +1,5 @@
+#!/bin/env bash
+
+ggc -c "gurulib.c" -o "gurulib.o"
+wait
+gcc "sort.c" -Wall -Wextra -fsanitize=address -o "sort" "gurulib.o" "gurulib"
