@@ -1,3 +1,3 @@
 #pragma once
 
-static void gError(char*, int);
+void gError(char*, int);
