@@ -1,0 +1,7 @@
+Note to self: DON'T have another executable on your system with the same name as the script you use to compile your programs.
+Next time, use "which" to find what exactly is being ran.
+
+The bash script currently named "build" used to be named "comp".
+In my PATH, I had a previous script named "comp" that was being ran instead of the one in this github repo.
+This gave me a massive headache.
+Be careful what you put in your PATH variable, kids.
