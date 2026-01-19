@@ -3,8 +3,6 @@
 #include <time.h>
 #include <string.h>
 
-#include "gurulib.h"
-
 void echo(char* string) {
 	printf("%s\n", string);
 }
@@ -12,7 +10,8 @@ void echo(char* string) {
 // Errors if the pointer is null
 void nonull(void * pointer) {
 	if (pointer == NULL) {
-		gError("Null pointer exception", 10);
+		fprintf(stderr, "%s", "Null pointer exception");
+		exit(10);
 	}
 }
 
