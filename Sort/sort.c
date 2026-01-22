@@ -139,45 +139,47 @@ Quicksort is a divide-and-conquer algorithm
 	We do not care about how MUCH greater or less than it is compared to the pivot point
 4. Call the function again on each sub-range
 
-If we had a list of 11 elements, 0 through 10...
-The middle index would be... 5 with a value of 4, ideally
-0 - 4  is less than 5
-6 - 10 is greater than 5
-
-[0] = 7		X
-[1] = 2
-[2] = 10	X
-[3] = 1
-[4] = 8		X
-[5] = 5		X	Pivot
-[6] = 11
-[7] = 3		X
-[8] = 4		X
-[9] = 6
-[10] = 9
-
-Divide the subranges up between 0-4 and 6-10
-Each subrange has an equal amount of numbers in the wrong place, 3
-Swap 7 with 3, 10 with 4, and 8 with 6
-
 */
 
-void quicksort(int* list, int length, int start, int end) {
+int partition(int* array, int low, int high) {
 
-	if (length <= 2) {return;}
+	// TODO replace this with median-of-three or random
+	int pivot = array[low];
 
-	int pivot = (int) floor(length) / 2;
+	int left = low - 1;
+	int right = high + 1;
 
-	for (int i = start; i < end; i++) {
+	while (1) {
 
-		// If index is less than pivot and value is greater than pivot
-		if (i < pivot && list[i] > pivot) {
+		// These indices converge
+		// They stop moving when they detect a value not in the right place
+		do { left = left + 1; } while ( array[left] < pivot );
+		do { right = right - 1; } while ( array[right] > pivot );
 
-			quicksort(list, end - start, newStart, newEnd);
-		} else {
+		// If no errors are detected, return the right index as the pivot point
+		if ( left >= right ) { return right; }
 
-			quicksort(list, end - start, newStart, newEnd);
-		}
+		// If errors are detected... left and right indexes swap values
+		swap_ints( &array[left], &array[right] );
+	}
+
+	return pivot;
+}
+
+// Hoare's partition scheme
+// Takes an array and two indices of the array
+void quicksort(int* array, int low, int high) {
+
+	// If indices are non-negative and low is less than high
+	if (low >= 0 && high >= 0 && low < high) {
+
+		// Returns an index
+		// partition() actually does the sorting
+		int pivot = partition(array, low, high);
+
+		// Sort these ranges!
+		quicksort(array, low, pivot);
+		quicksort(array, pivot + 1, high);
 	}
 }
 
@@ -200,9 +202,17 @@ int main() {
 	print_list(list, limit);
 	echo("------------");
 
-	echo("Bogosorting...");
+	// TODO make user choose sorting method
+
+	/* echo("Bogosorting...");
 	int steps = bogosort(list, limit);
 	printf("%s %d %s\n", "Sorted! Took", steps, "steps");
+	print_list(list, limit); */
+
+	shuffle_list(list, limit);
+	echo("Quick sorting...");
+	quicksort(list, 0, limit - 1);
+	echo("Sorted!");
 	print_list(list, limit);
 
 	free(list);
