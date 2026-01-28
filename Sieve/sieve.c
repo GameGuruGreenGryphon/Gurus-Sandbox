@@ -73,7 +73,6 @@ int main() {
 	uint64_t limit;
 	printf("%s\n", "Please enter an integer:");
 	scanf("%lu", &limit);
-
 	/*
 	This is a bit array, storing bit values
 	We need this to store whether or not a number is prime
@@ -83,7 +82,7 @@ int main() {
 	This is effectively a * 64 index saving measure
 	*/
 
-	void * primeArray = calloc(sizeof(uint64_t) * limit - 1 / 64, sizeof(uint64_t));
+	void * primeArray = calloc(limit - 1 / 64, sizeof(uint64_t));
 
 	// Go over each number in the list
 	uint64_t i;
