@@ -141,6 +141,8 @@ Quicksort is a divide-and-conquer algorithm
 
 */
 
+// TODO refactor this to take only two arguments, array and length
+// Challenge from a friend
 int partition(int* array, int low, int high) {
 
 	// TODO replace this with median-of-three or random
@@ -203,6 +205,7 @@ int main() {
 	echo("------------");
 
 	// TODO make user choose sorting method
+	// TODO read user input? somehow?
 
 	/* echo("Bogosorting...");
 	int steps = bogosort(list, limit);
