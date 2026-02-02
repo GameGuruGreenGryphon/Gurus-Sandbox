@@ -92,7 +92,7 @@ struct bit_array GetBitRange(struct bit_array array, unsigned int index, unsigne
 
 // Copies second array into first array starting at index
 void SetBitRange(struct bit_array changed_array, unsigned int index, struct bit_array copied_array) {
-	for (unsigned int i = 0; i < copied_array.bit_indices; i++) {
+	for (unsigned int i = 0; i <= copied_array.bit_indices; i++) {
 		SetBit(changed_array, i + index, GetBit(copied_array, i));
 	}
 }
@@ -115,7 +115,7 @@ struct bit_array ToBitArray(uint64_t number) {
 
 	struct bit_array new = MakeBitArray(length);
 
-	for (int i = 0; i <= length; i++) {
+	for (unsigned int i = 0; i <= length; i++) {
 		SetBit(new, i, (number >> i) & 1);
 	}
 
@@ -141,8 +141,8 @@ int main() {
 	PrintBitArray(awesome);
 
 	SetBitRange(epic, 0, awesome);
-	PrintBitArray(epic);
 	free(awesome.inner);
+	PrintBitArray(epic);
 
 	free(epic.inner);
 }
