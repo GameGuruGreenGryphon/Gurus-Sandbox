@@ -28,7 +28,7 @@ struct bit_array MakeBitArray(unsigned int bit_length) {
 }
 
 // Returns 1 or 0
-unsigned int GetBit(struct bit_array array, unsigned int index) {
+unsigned int GetBit(struct bit_array* array, unsigned int index) {
 
 	// We don't do the fancy math from MakeBitArray() in here because this is 0-based
 	int array_elem_index = index / 64;
@@ -36,7 +36,7 @@ unsigned int GetBit(struct bit_array array, unsigned int index) {
 	// Don't index bits outside of the 64 bit range
 	int index_within_elem = index % 64;
 
-	uint64_t array_elem = array.inner[array_elem_index];
+	uint64_t array_elem = array -> inner[array_elem_index];
 
 	// Bit shift uint64 right until the least significant bit is the bit we want to retrieve
 	uint64_t mask = 1;
@@ -44,55 +44,55 @@ unsigned int GetBit(struct bit_array array, unsigned int index) {
 }
 
 // Sets a bit to 1 or 0
-void SetBit(struct bit_array array, unsigned int index, unsigned int bool) {
+void SetBit(struct bit_array* array, unsigned int index, unsigned int bool) {
 
-	if (index > array.bit_indices) {
-		array.bit_indices = index;
+	if (index > array -> bit_indices) {
+		array -> bit_indices = index;
 	}
 
 	// If index is beyond actual allocated memory
-	if (index > ( (array.array_indices + 1) * 64)) {
+	if (index > ( (array -> array_indices + 1) * 64)) {
 
 		// downloadmoreram.com
 		uint64_t* new = calloc(index / 64, sizeof(uint64_t));
 
 		// Copy data to new memory location
-		for (unsigned int i = 0; i <= array.array_indices; i++) {
-			new[i] = array.inner[i];
+		for (unsigned int i = 0; i <= array -> array_indices; i++) {
+			new[i] = array -> inner[i];
 		}
 
 		// Free old, crappy memory
-		free(array.inner);
+		free(array -> inner);
 
 		// Does this actually work?
-		array.inner = new;
+		array -> inner = new;
 	}
 
 	int array_elem_index = index / 64;
 	int index_within_elem = index % 64;
 
 	if (bool) {
-		array.inner[array_elem_index] |= (1 << index_within_elem);
+		array -> inner[array_elem_index] |= (1 << index_within_elem);
 	} else {
-		array.inner[array_elem_index] &= ~(1 << index_within_elem);
+		array -> inner[array_elem_index] &= ~(1 << index_within_elem);
 	}
 
 }
 
 // Returns a new bit array containing only the bits in the range
-struct bit_array GetBitRange(struct bit_array array, unsigned int index, unsigned int delta) {
+struct bit_array GetBitRange(struct bit_array* array, unsigned int index, unsigned int delta) {
 	struct bit_array new = MakeBitArray(delta);
 
 	for (unsigned int i = 0; i <= delta; i++) {
-		SetBit(new, i, GetBit(array, i + index));
+		SetBit(&new, i, GetBit(array, i + index));
 	}
 
 	return new;
 }
 
 // Copies second array into first array starting at index
-void SetBitRange(struct bit_array changed_array, unsigned int index, struct bit_array copied_array) {
-	for (unsigned int i = 0; i <= copied_array.bit_indices; i++) {
+void SetBitRange(struct bit_array* changed_array, unsigned int index, struct bit_array* copied_array) {
+	for (unsigned int i = 0; i <= copied_array -> bit_indices; i++) {
 		SetBit(changed_array, i + index, GetBit(copied_array, i));
 	}
 }
@@ -116,14 +116,14 @@ struct bit_array ToBitArray(uint64_t number) {
 	struct bit_array new = MakeBitArray(length);
 
 	for (unsigned int i = 0; i <= length; i++) {
-		SetBit(new, i, (number >> i) & 1);
+		SetBit(&new, i, (number >> i) & 1);
 	}
 
 	return new;
 }
 
-void PrintBitArray(struct bit_array array) {
-	for (int i = array.bit_indices; i >= 0; i--) {
+void PrintBitArray(struct bit_array* array) {
+	for (int i = array -> bit_indices; i >= 0; i--) {
 		printf("%d", GetBit(array, i));
 	}
 
@@ -132,17 +132,17 @@ void PrintBitArray(struct bit_array array) {
 
 int main() {
 	struct bit_array epic = MakeBitArray(64);
-	PrintBitArray(epic);
+	PrintBitArray(&epic);
 
-	SetBit(epic, 5, 1);
-	PrintBitArray(epic);
+	SetBit(&epic, 5, 1);
+	PrintBitArray(&epic);
 
 	struct bit_array awesome = ToBitArray(75);
-	PrintBitArray(awesome);
+	PrintBitArray(&awesome);
 
-	SetBitRange(epic, 0, awesome);
+	SetBitRange(&epic, 0, &awesome);
 	free(awesome.inner);
-	PrintBitArray(epic);
+	PrintBitArray(&epic);
 
 	free(epic.inner);
 }
