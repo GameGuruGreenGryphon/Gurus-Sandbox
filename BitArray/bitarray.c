@@ -8,12 +8,6 @@ struct bit_array {
 	uint64_t* inner;
 };
 
-int count = 0;
-void debug(char* message) {
-	printf("%s%d%s%s%s\n", "[", count, "] <", message, ">");
-	count++;
-}
-
 // Handles the struct of the array
 struct bit_array MakeBitArray(unsigned int bit_length) {
 
@@ -23,7 +17,7 @@ struct bit_array MakeBitArray(unsigned int bit_length) {
 	// b / 64 is always truncated
 	// if b = 0 - 63, b/64 = 0
 	// if b = 64, b/64 = 1, but 64 bits can be stored in one element
-	uint32_t to_alloc = (bit_length / 64) + ((bit_length % 64) == 0);
+	uint32_t to_alloc = (bit_length / 64) + ((bit_length % 64) != 0);
 
 	// Actually allocate the memory
 	uint64_t* inner = calloc(to_alloc, sizeof(uint64_t));
@@ -52,12 +46,10 @@ unsigned int GetBit(struct bit_array array, unsigned int index) {
 // Sets a bit to 1 or 0
 void SetBit(struct bit_array array, unsigned int index, unsigned int bool) {
 
-	debug("Setbit | Check");
 	if (index > array.bit_indices) {
 		array.bit_indices = index;
 	}
 
-	debug("Setbit | Malloc");
 	// If index is beyond actual allocated memory
 	if (index > ( (array.array_indices + 1) * 64)) {
 
@@ -79,7 +71,6 @@ void SetBit(struct bit_array array, unsigned int index, unsigned int bool) {
 	int array_elem_index = index / 64;
 	int index_within_elem = index % 64;
 
-	debug("Setbit | Bool set");
 	if (bool) {
 		array.inner[array_elem_index] |= (1 << index_within_elem);
 	} else {
