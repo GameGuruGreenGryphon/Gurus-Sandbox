@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 
 uint64_t Index64(uint64_t* array, int index) {
 	uint64_t value = array[index - 1 / 64];
@@ -72,7 +73,8 @@ void SetBit(uint64_t* array, int bit, int bool) {
 int main() {
 	uint64_t limit;
 	printf("%s\n", "Please enter an integer:");
-	scanf("%lu", &limit);
+	limit = 100;
+	// scanf("%lu", &limit);
 	/*
 	This is a bit array, storing bit values
 	We need this to store whether or not a number is prime
@@ -82,7 +84,7 @@ int main() {
 	This is effectively a * 64 index saving measure
 	*/
 
-	void * primeArray = calloc(limit - 1 / 64, sizeof(uint64_t));
+	void * primeArray = calloc( ceilf(limit / 64.0), sizeof(uint64_t));
 
 	// Go over each number in the list
 	uint64_t i;
