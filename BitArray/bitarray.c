@@ -59,7 +59,7 @@ void SetBit(struct bit_array* array, unsigned int index, unsigned int bool) {
 	}
 
 	// Increase array length if setting bit outside of allocated memory
-	if (index > ((array -> array_indices) * 64)) {
+	if (index >= ((array -> array_indices) * 64)) {
 		int bit_length = index + 1;
 		uint32_t to_alloc = (bit_length / 64) + ((bit_length % 64) != 0);
 
@@ -73,6 +73,7 @@ void SetBit(struct bit_array* array, unsigned int index, unsigned int bool) {
 
 		array -> array_indices = to_alloc;
 	}
+
 
 	int array_elem_index = index / 64;
 	int index_within_elem = index % 64;
@@ -136,34 +137,60 @@ void PrintBitArray(struct bit_array* array) {
 	printf("\n");
 }
 
-int main() {
-	struct bit_array epic = MakeBitArray(2);
+enum test_modes { setbit, setbitrange, getbit, getbitrange, oob };
+
+void Test(struct bit_array* array, int mode) {
+	switch(mode) {
+		case 1:
+			// Test setbit
+			SetBit(array, 5, 1);
+			printf("Set sixth bit to 1\n");
+			PrintBitArray(array);
+			break;
+		case 2:
+			// Test setbitrange
+			printf("75 in bit form\n");
+			struct bit_array awesome = ToBitArray(75);
+			PrintBitArray(&awesome);
+
+			printf("Set bits in first bit array to 75 bit string\n");
+			SetBitRange(array, 0, &awesome);
+			free(awesome.inner);
+			PrintBitArray(array);
+			break;
+		case 3:
+			// Test setbit when out of bounds
+			SetBit(array, array->bit_indices + 5, 1);
+			printf("Set bit 10 bit indices past max bit length\n");
+			PrintBitArray(array);
+			break;
+		case 4:
+			// Test getbit
+			printf("Fifth bit\n");
+			printf("%d\n", GetBit(array, 5));
+			printf("Sixth bit\n");
+			printf("%d\n", GetBit(array, 6));
+			break;
+		case 5:
+			// Test getbitrange
+			printf("Bit index 0 through 5\n");
+			struct bit_array range = GetBitRange(array, 0, 5);
+			PrintBitArray(&range);
+			free(range.inner);
+	}
+}
+
+int main(int argc, char* argv[]) {
+	printf("args: %d\n", argc);
+	int number = atoi(argv[1]);
+	printf("input: %d\n", number);
+
+	struct bit_array epic = MakeBitArray(number);
+	printf("New bit array\n");
 	PrintBitArray(&epic);
+	printf("\n");
 
-	// Test setbit
-	SetBit(&epic, 5, 1);
-	PrintBitArray(&epic);
-
-	// Test setbitrange
-	struct bit_array awesome = ToBitArray(75);
-	PrintBitArray(&awesome);
-
-	SetBitRange(&epic, 0, &awesome);
-	free(awesome.inner);
-	PrintBitArray(&epic);
-
-	// Test setbit when out of bounds
-	SetBit(&epic, epic.bit_indices + 10, 1);
-	PrintBitArray(&epic);
-
-	// Test getbit
-	printf("%d\n", GetBit(&epic, 5));
-	printf("%d\n", GetBit(&epic, 6));
-
-	// Test getbitrange
-	struct bit_array range = GetBitRange(&epic, 0, 5);
-	PrintBitArray(&range);
-	free(range.inner);
+	Test(&epic, 3);
 
 	free(epic.inner);
 }
