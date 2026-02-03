@@ -5,7 +5,7 @@
 struct bit_array {
 	unsigned int bit_indices;
 	unsigned int array_indices;
-	uint64_t* inner;
+	uint32_t* inner;
 };
 
 int count = 0;
@@ -19,13 +19,13 @@ struct bit_array MakeBitArray(unsigned int bit_length) {
 	// Indexes are 0-based
 	unsigned int bit_indices = bit_length - 1;
 
-	// b / 64 is always truncated
-	// if b = 0 - 63, b/64 = 0
-	// if b = 64, b/64 = 1, but 64 bits can be stored in one element
-	uint32_t to_alloc = (bit_length / 64) + ((bit_length % 64) != 0);
+	// b / 32 is always truncated
+	// if b = 0 - 63, b/32 = 0
+	// if b = 32, b/32 = 1, but 32 bits can be stored in one element
+	uint32_t to_alloc = (bit_length / 32) + ((bit_length % 32) != 0);
 
 	// Actually allocate the memory
-	uint64_t* inner = calloc(to_alloc, sizeof(uint64_t));
+	uint32_t* inner = calloc(to_alloc, sizeof(uint32_t));
 
 	// Structs!
 	struct bit_array new = { bit_indices, to_alloc, inner };
@@ -36,15 +36,15 @@ struct bit_array MakeBitArray(unsigned int bit_length) {
 unsigned int GetBit(struct bit_array* array, unsigned int index) {
 
 	// We don't do the fancy math from MakeBitArray() in here because this is 0-based
-	int array_elem_index = index / 64;
+	int array_elem_index = index / 32;
 
-	// Don't index bits outside of the 64 bit range
-	int index_within_elem = index % 64;
+	// Don't index bits outside of the 32 bit range
+	int index_within_elem = index % 32;
 
-	uint64_t array_elem = array -> inner[array_elem_index];
+	uint32_t array_elem = array -> inner[array_elem_index];
 
-	// Bit shift uint64 right until the least significant bit is the bit we want to retrieve
-	uint64_t mask = 1;
+	// Bit shift uint32 right until the least significant bit is the bit we want to retrieve
+	uint32_t mask = 1;
 	return (array_elem >> index_within_elem) & mask;
 }
 
@@ -53,30 +53,30 @@ unsigned int GetBit(struct bit_array* array, unsigned int index) {
 void SetBit(struct bit_array* array, unsigned int index, unsigned int bool) {
 
 	// Increase bit length if setting bit outside of bit length, but within allocated memory
-	// i.e. array of 64 bits with bit length 24, setting 32 to 1 would adjust accordingly
+	// i.e. array of 32 bits with bit length 24, setting 32 to 1 would adjust accordingly
 	if (index > array -> bit_indices) {
 		array -> bit_indices = index;
 	}
 
 	// Increase array length if setting bit outside of allocated memory
-	if (index >= ((array -> array_indices) * 64)) {
+	if (index >= ((array -> array_indices) * 32)) {
 		int bit_length = index + 1;
-		uint32_t to_alloc = (bit_length / 64) + ((bit_length % 64) != 0);
+		uint32_t to_alloc = (bit_length / 32) + ((bit_length % 32) != 0);
 
 		// Increase size of array
-		array -> inner = reallocarray(array -> inner, to_alloc, sizeof(uint64_t));
+		array -> inner = reallocarray(array -> inner, to_alloc, sizeof(uint32_t));
 
 		// Fill in new memory with zeros
 		for (unsigned int i = array->array_indices; i < to_alloc; i++) {
-			array->inner[i] = (uint64_t) 0;
+			array->inner[i] = (uint32_t) 0;
 		}
 
 		array -> array_indices = to_alloc;
 	}
 
 
-	int array_elem_index = index / 64;
-	int index_within_elem = index % 64;
+	int array_elem_index = index / 32;
+	int index_within_elem = index % 32;
 
 	if (bool) {
 		array -> inner[array_elem_index] |= (1 << index_within_elem);
@@ -105,12 +105,12 @@ void SetBitRange(struct bit_array* changed_array, unsigned int index, struct bit
 }
 
 // Converts scalar values into bit arrays
-struct bit_array ToBitArray(uint64_t number) {
+struct bit_array ToBitArray(uint32_t number) {
 
-	uint64_t length = 0;
+	uint32_t length = 0;
 
 	while (length < 65) {
-		uint64_t mask = ~0;
+		uint32_t mask = ~0;
 		mask = mask << length;
 
 		if ( (number & ~mask) == number) {
@@ -160,7 +160,7 @@ void Test(struct bit_array* array, int mode) {
 			break;
 		case 3:
 			// Test setbit when out of bounds
-			SetBit(array, array->bit_indices + 5, 1);
+			SetBit(array, array->bit_indices + 10, 1);
 			printf("Set bit 10 bit indices past max bit length\n");
 			PrintBitArray(array);
 			break;
