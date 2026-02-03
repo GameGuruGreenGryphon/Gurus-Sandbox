@@ -1,13 +1,17 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 struct bit_array {
 	unsigned int bit_indices;
 	unsigned int array_indices;
 	uint64_t* inner;
 };
+
+int count = 0;
+void debug(char* string) {
+	printf("[%d]: %s\n", ++count, string);
+}
 
 // Handles the struct of the array
 struct bit_array MakeBitArray(unsigned int bit_length) {
@@ -48,18 +52,24 @@ unsigned int GetBit(struct bit_array* array, unsigned int index) {
 // Bit array increases in size when indexing beyond indices
 void SetBit(struct bit_array* array, unsigned int index, unsigned int bool) {
 
+	// Increase bit length if setting bit outside of bit length, but within allocated memory
+	// i.e. array of 64 bits with bit length 24, setting 32 to 1 would adjust accordingly
 	if (index > array -> bit_indices) {
 		array -> bit_indices = index;
 	}
 
-	// Increase bit length if setting bit outside of allocated memory
-	if (index > (array -> array_indices * 64)) {
-
+	// Increase array length if setting bit outside of allocated memory
+	if (index > ((array -> array_indices) * 64)) {
 		int bit_length = index + 1;
 		uint32_t to_alloc = (bit_length / 64) + ((bit_length % 64) != 0);
 
 		// Increase size of array
-		free(reallocarray(array -> inner, to_alloc, sizeof(uint64_t)));
+		array -> inner = reallocarray(array -> inner, to_alloc, sizeof(uint64_t));
+
+		// Fill in new memory with zeros
+		for (unsigned int i = array->array_indices; i < to_alloc; i++) {
+			array->inner[i] = (uint64_t) 0;
+		}
 
 		array -> array_indices = to_alloc;
 	}
@@ -111,7 +121,7 @@ struct bit_array ToBitArray(uint64_t number) {
 
 	struct bit_array new = MakeBitArray(length);
 
-	for (unsigned int i = 0; i <= length; i++) {
+	for (unsigned int i = 0; i < length; i++) {
 		SetBit(&new, i, (number >> i) & 1);
 	}
 
@@ -127,7 +137,7 @@ void PrintBitArray(struct bit_array* array) {
 }
 
 int main() {
-	struct bit_array epic = MakeBitArray(64);
+	struct bit_array epic = MakeBitArray(2);
 	PrintBitArray(&epic);
 
 	// Test setbit
@@ -145,6 +155,15 @@ int main() {
 	// Test setbit when out of bounds
 	SetBit(&epic, epic.bit_indices + 10, 1);
 	PrintBitArray(&epic);
+
+	// Test getbit
+	printf("%d\n", GetBit(&epic, 5));
+	printf("%d\n", GetBit(&epic, 6));
+
+	// Test getbitrange
+	struct bit_array range = GetBitRange(&epic, 0, 5);
+	PrintBitArray(&range);
+	free(range.inner);
 
 	free(epic.inner);
 }
