@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct bit_array {
 	unsigned int bit_indices;
@@ -44,28 +45,23 @@ unsigned int GetBit(struct bit_array* array, unsigned int index) {
 }
 
 // Sets a bit to 1 or 0
+// Bit array increases in size when indexing beyond indices
 void SetBit(struct bit_array* array, unsigned int index, unsigned int bool) {
 
 	if (index > array -> bit_indices) {
 		array -> bit_indices = index;
 	}
 
-	// If index is beyond actual allocated memory
-	if (index > ( (array -> array_indices + 1) * 64)) {
+	// Increase bit length if setting bit outside of allocated memory
+	if (index > (array -> array_indices * 64)) {
 
-		// downloadmoreram.com
-		uint64_t* new = calloc(index / 64, sizeof(uint64_t));
+		int bit_length = index + 1;
+		uint32_t to_alloc = (bit_length / 64) + ((bit_length % 64) != 0);
 
-		// Copy data to new memory location
-		for (unsigned int i = 0; i <= array -> array_indices; i++) {
-			new[i] = array -> inner[i];
-		}
+		// Increase size of array
+		free(reallocarray(array -> inner, to_alloc, sizeof(uint64_t)));
 
-		// Free old, crappy memory
-		free(array -> inner);
-
-		// Does this actually work?
-		array -> inner = new;
+		array -> array_indices = to_alloc;
 	}
 
 	int array_elem_index = index / 64;
@@ -134,14 +130,20 @@ int main() {
 	struct bit_array epic = MakeBitArray(64);
 	PrintBitArray(&epic);
 
+	// Test setbit
 	SetBit(&epic, 5, 1);
 	PrintBitArray(&epic);
 
+	// Test setbitrange
 	struct bit_array awesome = ToBitArray(75);
 	PrintBitArray(&awesome);
 
 	SetBitRange(&epic, 0, &awesome);
 	free(awesome.inner);
+	PrintBitArray(&epic);
+
+	// Test setbit when out of bounds
+	SetBit(&epic, epic.bit_indices + 10, 1);
 	PrintBitArray(&epic);
 
 	free(epic.inner);
