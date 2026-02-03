@@ -1,12 +1,7 @@
+#include "bitarray.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-
-struct bit_array {
-	unsigned int bit_indices;
-	unsigned int array_indices;
-	uint32_t* inner;
-};
 
 int count = 0;
 void debug(char* string) {
@@ -136,8 +131,6 @@ void PrintBitArray(struct bit_array* array) {
 
 	printf("\n");
 }
-
-enum test_modes { setbit, setbitrange, getbit, getbitrange, oob };
 
 void Test(struct bit_array* array, int mode) {
 	switch(mode) {
