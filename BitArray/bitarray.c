@@ -172,18 +172,3 @@ void Test(struct bit_array* array, int mode) {
 			free(range.inner);
 	}
 }
-
-int main(int argc, char* argv[]) {
-	printf("args: %d\n", argc);
-	int number = atoi(argv[1]);
-	printf("input: %d\n", number);
-
-	struct bit_array epic = MakeBitArray(number);
-	printf("New bit array\n");
-	PrintBitArray(&epic);
-	printf("\n");
-
-	Test(&epic, 3);
-
-	free(epic.inner);
-}

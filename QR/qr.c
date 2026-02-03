@@ -1,5 +1,7 @@
 // Written by GameGuru
 
+#include "../BitArray/bitarray.c"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,63 +14,22 @@
 // Character sets
 // Organized by largest to smallest data size
 // n = numeric, a = alphanumeric, b = binary, k = kanji
-char const charModes[] = { 'n', 'a', 'b', 'k' };
+enum charModes { NUMERIC, ALPHANUMERIC, BINARY, KANJI };
 
 // Error correction level
 // Organized by biggest character capacity to smallest
 // l = low, m = medium, q = quartile, h = high
-char const errorModes[] = { 'l', 'm', 'q', 'h' };
+enum errorModes { LOW, MEDIUM, QUARTILE, HIGH };
 
-// Returns the index of the character it found, errors otherwise
-int CheckErrorFormat(char input) {
-	// Valid modes to choose from
-	// High, Low, Medium, Quartile
-
-	// If first character of input string matches any character in the errorModes string
-	int i;
-	for (i = 0; i < strlen(errorModes); i++) {
-		if (input == errorModes[i]) {
-			return i;
-		}
-	}
-
-	// If not...
-	fprintf(stderr, "%s: %c\n", "Invalid error correction mode provided", input);
-	exit(3);
-}
-
-// Returns the index of the character it found, errors otherwise
-int CheckCharFormat(char input) {
-	int i;
-	for (i = 0; i < strlen(charModes); i++) {
-		if (input == charModes[i]) {
-			return i;
-		}
-	}
-
-	fprintf(stderr, "%s: %c\n", "Invalid character mode provided", input);
-	exit(4);
-}
-
-// Unused, for now
-int CheckVersion(char char1, char char2) {
-
-	char const strNum[] = { char1, char2 };
-	int const composedInt = atoi(strNum);
-
-	if (composedInt >= 1 && composedInt <= 40) {
-		return composedInt;
-	} else {
-		printf("%s: %d\n", "Invalid QR version provided", composedInt);
-		exit(1);
-	}
-}
+#define MODECOUNT 4
 
 // Given an error mode, character mode, and string, returns the smallest version and integer that can contain the string
-int SmallestCapacity(char errorMode, char charMode, char* string) {
+int SmallestCapacity( unsigned errorMode, unsigned charMode, char* string) {
 
-	int e_index = CheckErrorFormat(errorMode);
-	int c_index = CheckCharFormat(charMode);
+	if (errorMode > MODECOUNT || charMode > MODECOUNT) {
+		fprintf(stderr, "Invalid error or char mode provided");
+		exit(5);
+	}
 
 	// Below is arrays of all character limits for all combinations of character sets, error code level, and QR code version
 	// Format is CharLimits[CharacterType][ErrorLevel][QRLevel]
@@ -76,7 +37,7 @@ int SmallestCapacity(char errorMode, char charMode, char* string) {
 	
 	// Editor's note: I hate this, and you should too
 	
-	int const CharLimits[4][4][40] =
+	const int CharLimits[4][4][40] =
 		{
 			{	// Numeric
 				{	// Low
@@ -128,10 +89,10 @@ int SmallestCapacity(char errorMode, char charMode, char* string) {
 		};
 
 
-	// Return the index of the first character limit that can contain the string 
+	// Return the index of the first character limit that can contain the string
 	int i;
 	for (i = 0; i < 40; ++i) {
-		int limit = CharLimits[c_index][e_index][i];
+		int limit = CharLimits[charMode][errorMode][i];
 		if (limit > strlen(string)) {
 			return i + 1;
 		}
@@ -139,7 +100,7 @@ int SmallestCapacity(char errorMode, char charMode, char* string) {
 
 	// TODO make this error fancier
 	fprintf(stderr, "%s", "Input string contains too much data\n");
-	exit(5);
+	exit(6);
 }
 
 // Check if char is any of these etc characters
@@ -158,7 +119,7 @@ int isetc(char c) {
 
 // Get the character set of a given string
 // Formats all whitespace characters to ' '
-char CharSet(char* string) {
+unsigned CharSet(char* string) {
 
 	char mode = 'n';
 
@@ -195,26 +156,25 @@ char CharSet(char* string) {
 		// All the etc characters and all numbers
 		} else if (! isetc(ch) && ! isalnum(ch)) {
 			// We went through all basic characters (except kanji) so it's gotta be binary ascii
-			return 'b';
+			return 2;
 		}
 
 		if (caseCount > 1) {
-			return 'b';
+			return 2;
 		}
 	}
 
 	if (caseCount <= 1) {
-		return 'a';
+		return 1;
 	}
 
-	return 'n';
+	return 0;
 }
 
 int main() {
 
 	char inputString[7089];
 
-	// Read standard input
 	printf("Insert string to encode: \n");
 	fgets(inputString, sizeof(inputString), stdin);
 	
@@ -238,58 +198,30 @@ int main() {
 	// 	Level Q 	25% of data bytes can be restored
 	// 	Level H 	30% of data bytes can be restored
 	
-	// Usage
-	// 	qr format string
-	//
-	// Outputs a BMP file containing a QR code
-	// 
-	// First string is format, it is up to 4 characters long
-	//
-	// First char is the error correction level
-	// input[1] = [lmqh]
-	//
-	// Second char is the character set
-	// input[2] = [nabk]
-	//
-	// Third and fourth characters will be the version number
-	// input[3] = [1..9]
-	// input[4] = [1..9]
-	// Ensure the version number is between 1 and 40, inclusive
-	//
-	// Second string is the string to be encoded
-	// Must match the character set specified in format string
-
-	// This is really the only data the user has to specify along with the second input string.
-	// Error correction level
 	// TODO make this a command line option
-	char errorMode = 'm';
-
-	// Now for the actual hard work
-	// TODO generate a QR code and output it to stdout
-
-	// So... now what?
-	// We need to determine the character capacity of the QR code we need.
-	// Input error correction level and character set to find the smallest version that can store the data.
+	unsigned errorMode = 1;
 
 	if ( strlen(inputString) < 1 ) {
 		fprintf(stderr, "%s\n", "No string to encode");
 		exit(2);
 	}
 
-	char charMode = CharSet(inputString);
+	unsigned charMode = CharSet(inputString);
 	
-	int version = SmallestCapacity(errorMode, charMode, inputString);
+	unsigned version = SmallestCapacity(errorMode, charMode, inputString);
 
 	// TODO data encoding	https://www.thonky.com/qr-code-tutorial/data-encoding
-	uint64_t bitString = 0;
 	
-	// Add the mode indicator
-	// CheckCharFormat returns the index of the character passed in, which is also organized in the same order as the mode indicator
-	// Neat!
-	bitString = bitString + (1 << CheckCharFormat(charMode));
+	struct bit_array working = MakeBitArray(4);
+
+	struct bit_array mode_indicator = ToBitArray(1 << charMode);
+	SetBitRange(&working, 0, &mode_indicator);
 
 	// Add the character count indicator
-	uint64_t length = strlen(inputString);
+	struct bit_array count_indicator = ToBitArray(strlen(inputString));
+
+	SetBitRange(&working, 0, &count_indicator);
+	// Left pad these bits with zeros according to table on their website
 	
 	// Encode using selected mode
 	
@@ -303,5 +235,7 @@ int main() {
 	// TODO error correction coding
 	//
 	
-
+	free(working.inner);
+	free(mode_indicator.inner);
+	free(count_indicator.inner);
 }
