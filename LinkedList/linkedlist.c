@@ -7,8 +7,6 @@ struct node {
 };
 
 #define MAXLIST 100
-char ENDLIST = '\0';
-char STARTLIST = ~0;
 
 struct node* MakeNode(struct node* next, char data) {
 	struct node *newNode = malloc(sizeof(struct node));
@@ -17,117 +15,131 @@ struct node* MakeNode(struct node* next, char data) {
 	return newNode;
 }
 
-struct node* InitList() {
-	struct node* tail = MakeNode(NULL, ENDLIST);
-	struct node* head = MakeNode(tail, STARTLIST);
-	return head;
+void PrintNode(struct node* node, char* name) {
+	printf("[%s]\tdata: %c\taddress: %p\tnext: %p\n", name, node->data, node, node->next);
 }
 
 int iter = 0;
 
 void PrintList(struct node* node) {
-	if (node->data != STARTLIST) {
-		printf("[%d]: %c\n", iter++, node->data);
+	while (node) {
+		PrintNode(node, "PrintList");
+		node = node->next;
 	}
+}
 
-	if (node->next->data != ENDLIST) {
-		PrintList(node->next);
-	} else {
-		iter = 0;
+int CountNodes(struct node* node) {
+	int count = 0;
+	while (node && count++ < MAXLIST) {
+		node = node->next;
 	}
+	return count;
 }
 
 // The true last node is the terminator node, which points to null
 // Deltas below 0 will traverse the nodes until the terminator is found
 // Deltas above 0 will traverse until it finds the node past delta
-struct node* FindNode(struct node* startNode, int delta) {
-
+struct node* FindNode(struct node* node, int delta) {
 	int count = 0;
-	struct node* node = startNode;
+
+	if (node == NULL) {
+		return NULL;
+	}
 
 	if (delta < 0) {
-		// Find penultimate list item
-		while (node->next->data != ENDLIST && count++ < MAXLIST) {
-			node = node->next;
-		}
-	} else {
-		// Find list terminator
-		while (node->data != ENDLIST && delta-- != 0 && count++ < MAXLIST) {
-			node = node->next;
-		}
+		delta = CountNodes(node);
 	}
+
+	while (node->next && count++ < delta) {
+		node = node->next;
+	}
+
 	return node;
 }
 
-//
 int DeleteNextNode(struct node* node, int delta) {
-	struct node* nextNode = FindNode(node, delta);
-	if (nextNode->data == ENDLIST) {
-		printf("Fail 1");
+
+	if (delta < 0) {
+		delta = CountNodes(node);
+		delta -= 2;
+	}
+
+	node = FindNode(node, delta);
+
+	if (node->next) {
+		struct node* todie = node->next;
+		node->next = node->next->next;
+		free(todie);
+
+		return 1;
+	} else {
 		return 0;
 	}
-
-	struct node* afterThat = FindNode(nextNode, 1);
-
-	node->next = afterThat;
-
-	free(nextNode);
-	
-	return 1;
 }
 
-void FreeList(struct node* head) {
+void FreeList(struct node* node) {
+	int count = 0;
 
-	struct node* reaper = head;
-
-	while (1) {
-		struct node* nextNode = FindNode(reaper, 1);
-		free(reaper);
-		if (reaper == nextNode) {
-			break;
+	while (node) {
+		if (count++ > MAXLIST) {
+			exit(1);
 		}
-		reaper = nextNode;
+
+		struct node* nextNode = node->next;
+		free(node);
+		node = nextNode;
 	}
 }
 
-struct node* InsertNode(struct node* startNode, char data, int delta) {
-	struct node* pen = FindNode(startNode, delta);
-	if (pen) {
-		return pen->next = MakeNode(pen->next, data);
-	} else {
-		return pen;
+struct node* InsertNode(struct node* node, char data, int delta) {
+	if (node == NULL) {
+		return NULL;
 	}
+	
+	node = FindNode(node, delta);
+
+	return node->next = MakeNode(node->next, data);
 }
 
 int main() {
-	struct node* head = InitList();
+	printf("Making head\n");
+	struct node* head = MakeNode(NULL, 0);
+	printf("Result:\n");
 	PrintList(head);
 	printf("\n");
 
+	printf("Inserting 'h'\n");
 	InsertNode(head, 'h', -1);
+	printf("Result:\n");
 	PrintList(head);
 	printf("\n");
 
+	printf("Inserting many 'e'\n");
 	for (int i = 0; i < 10; i++) {
 		InsertNode(head, 'e', -1);
 	}
 
+	printf("Result:\n");
 	PrintList(head);
 	printf("\n");
 
+	printf("Inserting familiar chars\n");
 	InsertNode(head, 'o', 2);
 	InsertNode(head, 'l', 2);
 	InsertNode(head, 'l', 2);
+	printf("Result:\n");
 	PrintList(head);
 	printf("\n");
 	
-	printf("Testing DeleteNextNode()");
-	DeleteNextNode(head, -1);
+	printf("Testing DeleteNextNode()\n");
+	DeleteNextNode(head, 5);
+	printf("Result:\n");
 	PrintList(head);
 	printf("\n");
 
-	printf("Testing DeleteNextNode()");
+	printf("Testing DeleteNextNode()\n");
 	DeleteNextNode(head, -1);
+	printf("Result:\n");
 	PrintList(head);
 
 	FreeList(head);
