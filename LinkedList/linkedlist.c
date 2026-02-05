@@ -19,8 +19,6 @@ void PrintNode(struct node* node, char* name) {
 	printf("[%s]\tdata: %c\taddress: %p\tnext: %p\n", name, node->data, node, node->next);
 }
 
-int iter = 0;
-
 void PrintList(struct node* node) {
 	while (node) {
 		PrintNode(node, "PrintList");
@@ -36,8 +34,7 @@ int CountNodes(struct node* node) {
 	return count;
 }
 
-// The true last node is the terminator node, which points to null
-// Deltas below 0 will traverse the nodes until the terminator is found
+// Deltas below 0 will traverse the nodes until a node that leads to NULL is found
 // Deltas above 0 will traverse until it finds the node past delta
 struct node* FindNode(struct node* node, int delta) {
 	int count = 0;
