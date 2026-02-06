@@ -1,0 +1,7 @@
+#!/bin/env bash
+
+gcc -c "../BitArray/bitarray.c" -o "bitarray.o"
+wait
+gcc -Wall -Wextra -fsanitize=address -lm -g "sieve.c" "bitarray.o" -o "sieve"
+wait
+rm "bitarray.o"
